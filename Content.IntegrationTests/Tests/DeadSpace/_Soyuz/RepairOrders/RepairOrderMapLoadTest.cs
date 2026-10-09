@@ -1,31 +1,25 @@
 // Мёртвый Космос, Союз-1, Licensed under custom terms with restrictions on public hosting and commercial use, full text: https://raw.githubusercontent.com/dead-space-server/space-station-14-soyuz/master/LICENSES/LICENSE.TXT
 
 using System.Linq;
+using Content.Server.DeadSpace._Soyuz.RepairOrders;
 using Content.Shared.DeadSpace._Soyuz.RepairOrders;
-using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Utility;
 
 namespace Content.IntegrationTests.Tests.DeadSpace._Soyuz.RepairOrders;
 
 [TestFixture]
 public sealed class RepairOrderMapLoadTest
 {
-    private readonly record struct RepairOrderGridUsage(
-        string PrototypeId,
-        string Kind,
-        ResPath Path);
-
     [Test]
     public async Task RepairOrderGridsLoad()
     {
         await using var pair = await PoolManager.GetServerClient();
         var server = pair.Server;
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapLoader = entManager.System<MapLoaderSystem>();
+        var mapLoader = entManager.System<RepairStationGenerationSystem>();
         var mapSystem = entManager.System<SharedMapSystem>();
         var prototypeManager = server.ResolveDependency<IPrototypeManager>();
 
@@ -37,19 +31,12 @@ public sealed class RepairOrderMapLoadTest
 
             Assert.That(repairOrders, Is.Not.Empty, "No RepairOrderPrototype instances were loaded.");
 
-            var paths = repairOrders
-                .SelectMany(order => new[]
-                {
-                    new RepairOrderGridUsage(order.ID, "Target", order.TargetGridPath),
-                })
-                .GroupBy(usage => usage.Path)
-                .OrderBy(group => group.Key.ToString(), StringComparer.Ordinal);
-
-            foreach (var pathGroup in paths)
+            var sources = repairOrders.GroupBy(order => order.ProceduralStation is { } station
+                ? $"procedural:{station.Id}" : $"map:{order.TargetGridPath}");
+            foreach (var group in sources)
             {
-                var path = pathGroup.Key;
-                var usages = string.Join(", ", pathGroup.Select(usage => $"{usage.PrototypeId} ({usage.Kind})"));
-                var diagnostic = $"Repair Order grid '{path}' used by: {usages}.";
+                var order = group.First();
+                var diagnostic = $"Repair Order grid '{group.Key}' used by: {string.Join(", ", group.Select(o => o.ID))}.";
                 var failingLogCount = pair.ServerLogHandler.FailingLogs.Count;
 
                 mapSystem.CreateMap(out var mapId);
@@ -60,7 +47,7 @@ public sealed class RepairOrderMapLoadTest
 
                     try
                     {
-                        loaded = mapLoader.TryLoadGrid(mapId, path, out grid);
+                        loaded = mapLoader.TryCreateTarget(mapId, order, 0, out grid);
                     }
                     catch (Exception exception)
                     {

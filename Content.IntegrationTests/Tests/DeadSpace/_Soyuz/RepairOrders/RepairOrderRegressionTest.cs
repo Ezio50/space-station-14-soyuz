@@ -11,7 +11,6 @@ using Content.Server.Station.Systems;
 using Content.Shared.Access.Components;
 using Content.Shared.DeadSpace._Soyuz.RepairOrders;
 using Content.Shared.Station.Components;
-using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
@@ -146,7 +145,7 @@ public sealed partial class RepairOrderRegressionTest
             try
             {
                 var prototype = SelectOrder(server.ProtoMan);
-                Assert.That(server.System<MapLoaderSystem>().TryLoadGrid(mapId, prototype.TargetGridPath, out var loaded), Is.True);
+                Assert.That(server.System<RepairStationGenerationSystem>().TryCreateTarget(mapId, prototype, 0, out var loaded), Is.True);
                 var grid = loaded!.Value;
                 repairGrid = grid.Owner;
                 Assert.That(validation.TryPrepareSession(station.Owner, station.Comp.NextRuntimeId++, prototype.ID, repairGrid, out var active), Is.True);

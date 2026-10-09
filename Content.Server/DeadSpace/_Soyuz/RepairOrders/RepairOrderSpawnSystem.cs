@@ -8,7 +8,6 @@ using Content.Server.Shuttles.Systems;
 using Content.Server.Station.Systems;
 using Content.Shared.DeadSpace._Soyuz.RepairOrders;
 using Content.Shared.DeviceLinking;
-using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
@@ -41,7 +40,7 @@ public sealed class RepairOrderSpawnSystem : EntitySystem
 
     [Dependency] private readonly ILogManager _logManager = default!;
     [Dependency] private readonly MetaDataSystem _metaData = default!;
-    [Dependency] private readonly MapLoaderSystem _loader = default!;
+    [Dependency] private readonly RepairStationGenerationSystem _generation = default!;
     [Dependency] private readonly SharedMapSystem _map = default!;
     [Dependency] private readonly DeviceLinkSystem _deviceLink = default!;
     [Dependency] private readonly DockingSystem _docking = default!;
@@ -112,7 +111,7 @@ public sealed class RepairOrderSpawnSystem : EntitySystem
             Entity<MapGridComponent>? loadedGrid;
             try
             {
-                loaded = _loader.TryLoadGrid(mapId, order.TargetGridPath, out loadedGrid);
+                loaded = _generation.TryCreateTarget(mapId, order, offer.DamageSeed, out loadedGrid);
             }
             catch (Exception exception)
             {

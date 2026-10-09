@@ -8,7 +8,6 @@ using Content.Server.Atmos.EntitySystems;
 using Content.Server.DeadSpace._Soyuz.RepairOrders;
 using Content.Shared.Atmos.Components;
 using Content.Shared.DeadSpace._Soyuz.RepairOrders;
-using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
@@ -30,7 +29,7 @@ public sealed class RepairDamageTest
         await server.WaitAssertion(() =>
         {
             var damage = server.System<RepairOrderDamageSystem>();
-            var loader = server.System<MapLoaderSystem>();
+            var loader = server.System<RepairStationGenerationSystem>();
             var maps = server.System<SharedMapSystem>();
             var validation = server.System<RepairOrderValidationSystem>();
 
@@ -63,9 +62,10 @@ public sealed class RepairDamageTest
                     try
                     {
                         Assert.That(
-                            loader.TryLoadGrid(
+                            loader.TryCreateTarget(
                                 mapId,
-                                order.TargetGridPath,
+                                order,
+                                seed,
                                 out var loaded),
                             Is.True,
                             order.ID);
@@ -98,9 +98,10 @@ public sealed class RepairDamageTest
                         try
                         {
                             Assert.That(
-                                loader.TryLoadGrid(
+                                loader.TryCreateTarget(
                                     secondMap,
-                                    order.TargetGridPath,
+                                    order,
+                                    seed,
                                     out var other),
                                 Is.True);
 

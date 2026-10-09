@@ -63,8 +63,11 @@ public sealed partial class RepairOrderPrototype : IPrototype, ISerializationHoo
     /// <summary>
     /// Reference grid loaded only on a temporary paused map while building a repair blueprint.
     /// </summary>
-    [DataField(required: true)]
-    public ResPath TargetGridPath;
+    [DataField]
+    public ResPath TargetGridPath = new("");
+
+    [DataField]
+    public ProtoId<RepairStationPrototype>? ProceduralStation;
 
     [DataField(required: true)]
     public ProtoId<RepairDamageProfilePrototype> DamageProfile;
@@ -84,6 +87,8 @@ public sealed partial class RepairOrderPrototype : IPrototype, ISerializationHoo
     void ISerializationHooks.AfterDeserialization()
     {
         RepairOrderDifficulty.Validate(Difficulty);
+        if ((ProceduralStation == null) == string.IsNullOrEmpty(TargetGridPath.ToString()))
+            throw new InvalidDataException($"Repair order {ID} must specify either targetGridPath or proceduralStation.");
         if (RepairTime <= TimeSpan.Zero)
             throw new InvalidDataException($"Repair order {ID} must have a positive repairTime.");
     }

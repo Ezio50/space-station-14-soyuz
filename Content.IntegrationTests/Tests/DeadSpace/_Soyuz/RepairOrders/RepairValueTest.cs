@@ -6,7 +6,6 @@ using Content.Server.DeadSpace._Soyuz.RepairOrders;
 using Content.Shared.DeadSpace._Soyuz.RepairOrders;
 using Content.Shared.Maps;
 using Robust.Shared.ContentPack;
-using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
@@ -249,11 +248,11 @@ public sealed class RepairValueTest
         await server.WaitAssertion(() =>
         {
             var maps = server.System<SharedMapSystem>();
-            var loader = server.System<MapLoaderSystem>();
+            var loader = server.System<RepairStationGenerationSystem>();
             var validation = server.System<RepairOrderValidationSystem>();
             var catalog = RepairValueCatalog.Build(server.ProtoMan);
             var orders = server.ProtoMan.EnumeratePrototypes<RepairOrderPrototype>().ToArray();
-            var referencedPaths = orders.Select(order => order.TargetGridPath).ToHashSet();
+            var referencedPaths = orders.Where(order => order.ProceduralStation == null).Select(order => order.TargetGridPath).ToHashSet();
             var resources = server.ResolveDependency<IResourceManager>();
             foreach (var path in resources.ContentFindFiles(new ResPath("/Maps/_Soyuz/RepairOrders"))
                          .Where(path => path.Extension == "yml"))
@@ -268,7 +267,7 @@ public sealed class RepairValueTest
                 EntityUid grid = default;
                 try
                 {
-                    Assert.That(loader.TryLoadGrid(mapId, path, out var loaded), Is.True, path.ToString());
+                    Assert.That(loader.TryCreateTarget(mapId, order, 0, out var loaded), Is.True, order.ID);
                     grid = loaded!.Value.Owner;
                     Assert.That(validation.TryPrepareSession(station, 1, order.ID, grid, out var session), Is.True, $"{order.ID}: {path}");
                     var blueprint = server.EntMan.GetComponent<RepairBlueprintComponent>(grid);

@@ -9,7 +9,6 @@ using Content.Shared.DeadSpace._Soyuz.RepairOrders;
 using Content.Shared.Maps;
 using Content.Shared.Tag;
 using Robust.Server.Physics;
-using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
@@ -22,7 +21,7 @@ namespace Content.Server.DeadSpace._Soyuz.RepairOrders;
 public sealed partial class RepairOrderValidationSystem : EntitySystem
 {
     [Dependency] private readonly ILogManager _logManager = default!;
-    [Dependency] private readonly MapLoaderSystem _loader = default!;
+    [Dependency] private readonly RepairStationGenerationSystem _generation = default!;
     [Dependency] private readonly SharedMapSystem _map = default!;
     [Dependency] private readonly IPrototypeManager _prototype = default!;
     [Dependency] private readonly SharedAtmosPipeLayersSystem _pipeLayers = default!;
@@ -255,14 +254,20 @@ public sealed partial class RepairOrderValidationSystem : EntitySystem
             _temporaryTargetMaps[blueprint.Owner] = mapId;
             _map.SetPaused(temporaryMap, true);
 
-            // TryLoadGrid also rejects files which do not contain exactly one grid.
-            if (!_loader.TryLoadGrid(mapId, order.TargetGridPath, out var loadedTarget))
+            var seed = 0;
+            if (order.ProceduralStation is { } configuration)
+            {
+                if (!TryComp<RepairGeneratedStationComponent>(blueprint.Owner, out var generated) ||
+                    generated.Configuration != configuration)
+                    return false;
+                seed = generated.Seed;
+            }
+            if (!_generation.TryCreateTarget(mapId, order, seed, out var loadedTarget) || loadedTarget is not { } target)
             {
                 _sawmill.Error($"Cannot build repair blueprint for {order.ID}: target grid {order.TargetGridPath} failed to load or does not contain exactly one grid.");
                 return false;
             }
 
-            var target = loadedTarget.Value;
             var scoreLookup = BuildScoreLookup(order, blueprint.Owner);
             _scoreLookups[blueprint.Owner] = scoreLookup;
             blueprint.Comp.EntityIdentityRules.Clear();

@@ -1,0 +1,1115 @@
+- type: repairStation
+  id: RepairStationCompact
+  minColumns: 2
+  maxColumns: 3
+  minBranchColumns: 1
+  maxBranchColumns: 1
+  minRoomWidth: 8
+  maxRoomWidth: 10
+  minRoomDepth: 8
+  maxRoomDepth: 9
+  requiredRooms: &repairStationRequiredRooms
+  - RepairStationEngineering
+  - RepairStationAtmospherics
+  commonAreas: &repairStationCommonAreas
+  - RepairStationLounge
+  - RepairStationRecreation
+  - RepairStationObservatory
+  borderDecals: &repairStationBorders
+    North: BrickTileSteelLineN
+    East: BrickTileSteelLineE
+    South: BrickTileSteelLineS
+    West: BrickTileSteelLineW
+  cornerDecals: &repairStationCorners
+    NorthEast: BrickTileSteelCornerNe
+    SouthEast: BrickTileSteelCornerSe
+    SouthWest: BrickTileSteelCornerSw
+    NorthWest: BrickTileSteelCornerNw
+  innerCornerDecals: &repairStationInnerCorners
+    NorthEast: BrickTileSteelInnerNe
+    SouthEast: BrickTileSteelInnerSe
+    SouthWest: BrickTileSteelInnerSw
+    NorthWest: BrickTileSteelInnerNw
+  corridorColor: "#FFFFFF"
+  corridorDecoration: &repairStationCorridorDecor
+  - PottedPlant0
+  - PottedPlant2
+  - ComfyChair
+  rooms: &repairStationRooms
+  - RepairStationEngineering
+  - RepairStationMedical
+  - RepairStationLaboratory
+  - RepairStationStorage
+  - RepairStationHydroponics
+  - RepairStationLounge
+  - RepairStationOffice
+  - RepairStationCommunications
+  - RepairStationAtmospherics
+  - RepairStationKitchen
+  - RepairStationBar
+  - RepairStationDormitory
+  - RepairStationRobotics
+  - RepairStationSalvage
+  - RepairStationTelecommunications
+  - RepairStationCryogenics
+  - RepairStationJanitor
+  - RepairStationBathroom
+  - RepairStationRecreation
+  - RepairStationObservatory
+
+- type: repairStation
+  id: RepairStationStandard
+  minColumns: 3
+  maxColumns: 5
+  minBranchColumns: 1
+  maxBranchColumns: 2
+  minRoomWidth: 8
+  maxRoomWidth: 10
+  minRoomDepth: 8
+  maxRoomDepth: 10
+  requiredRooms: *repairStationRequiredRooms
+  commonAreas: *repairStationCommonAreas
+  commonAreaDepth: 7
+  borderDecals: *repairStationBorders
+  cornerDecals: *repairStationCorners
+  innerCornerDecals: *repairStationInnerCorners
+  corridorColor: "#FFFFFF"
+  corridorDecoration: *repairStationCorridorDecor
+  rooms: *repairStationRooms
+
+- type: repairStation
+  id: RepairStationLarge
+  minColumns: 4
+  maxColumns: 6
+  minBranchColumns: 2
+  maxBranchColumns: 3
+  minRoomWidth: 8
+  maxRoomWidth: 10
+  minRoomDepth: 9
+  maxRoomDepth: 12
+  requiredRooms: *repairStationRequiredRooms
+  commonAreas: *repairStationCommonAreas
+  commonAreaWidth: 10
+  commonAreaDepth: 8
+  borderDecals: *repairStationBorders
+  cornerDecals: *repairStationCorners
+  innerCornerDecals: *repairStationInnerCorners
+  corridorColor: "#FFFFFF"
+  corridorDecoration: *repairStationCorridorDecor
+  rooms: *repairStationRooms
+
+- type: repairStationRoom
+  id: RepairStationEngineering
+  section: Engineering
+  name: repair-station-room-engineering
+  frontWindows: 2
+  minDepth: 10
+  tile: FloorSteel
+  trim: FloorShuttleOrange
+  door: AirlockEngineeringGlass
+  accentColor: "#DF9653"
+  sign: SignEngineering
+  posters: [PosterLegitBuild, PosterLegitSafetyEyeProtection, PosterLegitSafetyMothPiping]
+  wallFixtures: [FireAlarm, ExtinguisherCabinetFilled]
+  entranceDecal: CautionGreyscale
+  windowWidth: 5
+  modules:
+  - anchor: BackLeft
+    size: 3,2
+    tile: Plating
+    marking: CautionGreyscale
+    highVoltageCables: ["0,1", "1,1", "2,1"]
+    entities:
+    - prototype: SMESBasic
+      position: 0,1
+    - prototype: SubstationBasic
+      position: 2,1
+      mediumVoltageConnection: true
+    - prototype: SMESBasic
+      position: 1,1
+    - prototype: CableTerminal
+      position: 0,0
+      rotation: 180
+      highVoltageConnection: true
+    - prototype: CableTerminal
+      position: 1,0
+      rotation: 180
+      highVoltageConnection: true
+  furnishings:
+  - area: Back
+    prototypes: [Autolathe]
+    maxCount: 1
+  - area: Front
+    tile: FloorSteelCheckerDark
+    prototypes: [ComputerPowerMonitoring, ComputerAtmosMonitoring]
+    seat: ChairOfficeDark
+    minCount: 2
+    maxCount: 2
+    spacing: 2
+    unique: true
+  - area: Left
+    continuous: true
+    prototypes: [TableReinforced]
+    props: [Wrench, Screwdriver, CableApcStack]
+    seat: Chair
+    minCount: 2
+    maxCount: 4
+    spacing: 1
+  - area: Right
+    prototypes: [ClosetToolFilled, LockerElectricalSuppliesFilled, Rack]
+    minCount: 2
+    maxCount: 4
+    spacing: 1
+    unique: true
+  decoration: [PottedPlant0, PottedPlant2]
+
+- type: repairStationRoom
+  id: RepairStationMedical
+  section: Medical
+  name: repair-station-room-medical
+  borderDecals: &repairRoomWhiteLines
+    North: BrickTileWhiteLineN
+    East: BrickTileWhiteLineE
+    South: BrickTileWhiteLineS
+    West: BrickTileWhiteLineW
+  cornerDecals: &repairRoomWhiteCorners
+    NorthEast: BrickTileWhiteCornerNe
+    SouthEast: BrickTileWhiteCornerSe
+    SouthWest: BrickTileWhiteCornerSw
+    NorthWest: BrickTileWhiteCornerNw
+  innerCornerDecals: &repairRoomWhiteInnerCorners
+    NorthEast: BrickTileWhiteInnerNe
+    SouthEast: BrickTileWhiteInnerSe
+    SouthWest: BrickTileWhiteInnerSw
+    NorthWest: BrickTileWhiteInnerNw
+  light: PoweredlightLED
+  frontWindows: 2
+  minDepth: 9
+  tile: FloorWhite
+  trim: FloorBlue
+  door: AirlockMedicalGlass
+  accentColor: "#79ACBB"
+  sign: SignMedical
+  posters: [PosterLegitCleanliness, PosterLegitHelpOthers, PosterLegitSafetyMothEpi]
+  wallFixtures: [IntercomMedical, DefibrillatorCabinetFilled]
+  entranceDecal: ArrowsGreyscale
+  partitionChance: 0.5
+  furnishings:
+  - area: Front
+    prototypes: [TableGlass]
+    props: [Paper, Pen, Syringe]
+    seat: ChairOfficeLight
+    continuous: true
+    minCount: 2
+    maxCount: 3
+    spacing: 1
+  - area: Back
+    prototypes: [MedicalScanner, VendingMachineMedical]
+    minCount: 2
+    maxCount: 2
+    unique: true
+  - area: Left
+    prototypes: [MedicalBed]
+    minCount: 2
+    maxCount: 4
+    spacing: 2
+  - area: Right
+    continuous: true
+    prototypes: [TableGlass]
+    props: [Gauze1, Brutepack1, Syringe, Beaker]
+    minCount: 2
+    maxCount: 4
+    spacing: 1
+  decoration: [PottedPlant1, PottedPlant4]
+
+- type: repairStationRoom
+  id: RepairStationLaboratory
+  section: Science
+  name: repair-station-room-laboratory
+  borderDecals: *repairRoomWhiteLines
+  cornerDecals: *repairRoomWhiteCorners
+  innerCornerDecals: *repairRoomWhiteInnerCorners
+  light: PoweredlightLED
+  frontWindows: 2
+  minDepth: 9
+  tile: FloorWhite
+  trim: FloorShuttlePurple
+  door: AirlockScienceGlass
+  accentColor: "#AE90BD"
+  sign: SignScience
+  posters: [PosterLegitScience, PosterLegitPeriodicTable, PosterLegitSafetyEyeProtection]
+  wallFixtures: [IntercomScience, ExtinguisherCabinetFilled]
+  entranceDecal: CautionGreyscale
+  partitionChance: 0.65
+  furnishings:
+  - area: Back
+    prototypes: [ChemMaster, ChemDispenser, ComputerResearchAndDevelopment]
+    minCount: 2
+    maxCount: 3
+    unique: true
+  - area: Left
+    continuous: true
+    prototypes: [TableGlass]
+    props: [Beaker, Syringe, Paper, Pen]
+    seat: ChairGreyscale
+    minCount: 2
+    maxCount: 4
+    spacing: 1
+  - area: Right
+    prototypes: [Rack, ClosetSteelBase, TableReinforced]
+    minCount: 2
+    maxCount: 4
+    spacing: 1
+  decoration: [PottedPlant2]
+
+- type: repairStationRoom
+  id: RepairStationStorage
+  section: Service
+  name: repair-station-room-storage
+  borderDecals: &repairRoomDarkLines
+    North: BrickTileDarkLineN
+    East: BrickTileDarkLineE
+    South: BrickTileDarkLineS
+    West: BrickTileDarkLineW
+  cornerDecals: &repairRoomDarkCorners
+    NorthEast: BrickTileDarkCornerNe
+    SouthEast: BrickTileDarkCornerSe
+    SouthWest: BrickTileDarkCornerSw
+    NorthWest: BrickTileDarkCornerNw
+  innerCornerDecals: &repairRoomDarkInnerCorners
+    NorthEast: BrickTileDarkInnerNe
+    SouthEast: BrickTileDarkInnerSe
+    SouthWest: BrickTileDarkInnerSw
+    NorthWest: BrickTileDarkInnerNw
+  light: PoweredWarmSmallLight
+  tile: FloorSteelPavement
+  trim: FloorDark
+  door: AirlockCargoGlass
+  accentColor: "#C6AC72"
+  sign: SignCargo
+  posters: [PosterLegitWorkForAFuture, PosterLegitSafetyReport]
+  wallFixtures: [IntercomSupply, ExtinguisherCabinetFilled]
+  entranceDecal: LoadingAreaGreyscale
+  furnishings:
+  - area: Island
+    prototypes: [Rack]
+    continuous: true
+    minCount: 2
+    maxCount: 3
+    spacing: 1
+    tile: FloorSteelCheckerDark
+    marking: DeliveryGreyscale
+  - area: Back
+    prototypes: [ClosetSteelBase, ClosetToolFilled]
+    minCount: 2
+    maxCount: 3
+    spacing: 1
+  - area: Left
+    continuous: true
+    prototypes: [Rack]
+    minCount: 3
+    maxCount: 5
+    spacing: 1
+  - area: Right
+    prototypes: [CrateGenericSteel, Rack, ClosetSteelBase]
+    minCount: 3
+    maxCount: 5
+    spacing: 1
+  decoration: [PottedPlant0]
+
+- type: repairStationRoom
+  id: RepairStationHydroponics
+  section: Service
+  name: repair-station-room-hydroponics
+  frontWindows: 2
+  tile: FloorHydro
+  trim: FloorSteelLime
+  door: AirlockHydroponicsGlass
+  accentColor: "#8EBA80"
+  sign: SignHydro1
+  posters: [PosterLegitFruitBowl, PosterLegitBotanyFear]
+  wallFixtures: [AirAlarm, FireAlarm]
+  entranceDecal: ArrowsGreyscale
+  furnishings:
+  - area: Island
+    prototypes: [HydroponicsTrayEmpty]
+    continuous: true
+    minCount: 2
+    maxCount: 3
+    spacing: 1
+    tile: FloorSteelLime
+  - area: Back
+    prototypes: [WaterTankFull, KitchenReagentGrinder, ClosetSteelBase]
+    minCount: 2
+    maxCount: 3
+    unique: true
+  - area: Left
+    continuous: true
+    prototypes: [HydroponicsTrayEmpty]
+    minCount: 3
+    maxCount: 5
+    spacing: 1
+  - area: Right
+    continuous: true
+    prototypes: [HydroponicsTrayEmpty]
+    minCount: 3
+    maxCount: 5
+    spacing: 1
+  decoration: [PottedPlant0, PottedPlant1, PottedPlant2]
+
+- type: repairStationRoom
+  id: RepairStationLounge
+  section: Habitation
+  name: repair-station-room-lounge
+  borderDecals: *repairRoomDarkLines
+  cornerDecals: *repairRoomDarkCorners
+  innerCornerDecals: *repairRoomDarkInnerCorners
+  light: PoweredWarmSmallLight
+  tile: FloorWood
+  trim: FloorSteelCheckerLight
+  door: AirlockGlass
+  accentColor: "#ACB993"
+  sign: SignConference
+  posters: [PosterLegitFruitBowl, PosterLegitIan, PosterLegitWalk]
+  wallFixtures: [IntercomCommon]
+  featureTile: FloorCarpetOffice
+  furnishings:
+  - area: Island
+    continuous: true
+    prototypes: [TableWood]
+    props: [DrinkMugBlue, BookBase]
+    seat: ChairWood
+    minCount: 1
+    maxCount: 2
+  - area: Back
+    prototypes: [VendingMachineCoffee, BookshelfFilled]
+    minCount: 2
+    maxCount: 2
+    unique: true
+  - area: Left
+    continuous: true
+    prototypes: [TableWood]
+    props: [DrinkMug, BookBase, Paper]
+    seat: ChairWood
+    minCount: 2
+    maxCount: 3
+    spacing: 2
+  - area: Right
+    prototypes: [ComfyChair]
+    minCount: 2
+    maxCount: 4
+    spacing: 1
+  decoration: [PottedPlant4, PottedPlant2]
+
+- type: repairStationRoom
+  id: RepairStationOffice
+  section: Command
+  name: repair-station-room-office
+  borderDecals: *repairRoomDarkLines
+  cornerDecals: *repairRoomDarkCorners
+  innerCornerDecals: *repairRoomDarkInnerCorners
+  light: PoweredWarmSmallLight
+  frontWindows: 2
+  tile: FloorSteelCheckerLight
+  trim: FloorBlue
+  door: AirlockCommandGlass
+  accentColor: "#8DA6CC"
+  sign: SignReception
+  posters: [PosterLegitHelpOthers, PosterLegitWorkForAFuture, PosterLegitStateLaws]
+  wallFixtures: [IntercomCommon]
+  featureTile: FloorCarpetOffice
+  partitionChance: 0.7
+  furnishings:
+  - area: Front
+    prototypes: [TableWood]
+    props: [Paper, Pen, BoxFolderBlueEmpty]
+    seat: ChairOfficeLight
+    continuous: true
+    minCount: 2
+    maxCount: 3
+    spacing: 1
+  - area: Island
+    continuous: true
+    prototypes: [TableWood]
+    props: [Paper, Pen]
+    seat: ChairOfficeLight
+    maxCount: 2
+  - area: Back
+    tile: FloorSteelCheckerDark
+    prototypes: [ComputerStationRecords]
+    seat: ChairOfficeLight
+    maxCount: 1
+  - area: Back
+    prototypes: [BookshelfFilled, filingCabinetTall]
+    maxCount: 2
+    unique: true
+  - area: Left
+    continuous: true
+    prototypes: [TableWood]
+    props: [Paper, Pen, BoxFolderBlueEmpty, DrinkMugBlack]
+    seat: ChairOfficeLight
+    minCount: 2
+    maxCount: 4
+    spacing: 1
+  - area: Right
+    prototypes: [filingCabinet, BookshelfFilled, ClosetSteelBase]
+    minCount: 2
+    maxCount: 3
+    unique: true
+  decoration: [PottedPlant1]
+
+- type: repairStationRoom
+  id: RepairStationCommunications
+  section: Command
+  name: repair-station-room-communications
+  borderDecals: *repairRoomDarkLines
+  cornerDecals: *repairRoomDarkCorners
+  innerCornerDecals: *repairRoomDarkInnerCorners
+  light: PoweredWarmSmallLight
+  frontWindows: 2
+  tile: FloorDark
+  trim: FloorShuttleBlue
+  door: AirlockGlass
+  accentColor: "#7BABB9"
+  sign: SignBridge
+  posters: [PosterLegitSafetyInternals, PosterLegitWorkForAFuture]
+  wallFixtures: [IntercomCommon, FireAlarm]
+  entranceDecal: ArrowsGreyscale
+  partitionChance: 0.6
+  furnishings:
+  - area: Back
+    tile: FloorSteelCheckerDark
+    prototypes: [ComputerRadar, ComputerSensorMonitoring, ComputerPowerMonitoring]
+    seat: ChairOfficeDark
+    minCount: 2
+    maxCount: 3
+    unique: true
+  - area: Left
+    continuous: true
+    prototypes: [TableReinforced]
+    props: [Paper, Pen, DrinkMugMetal]
+    seat: ChairOfficeDark
+    minCount: 2
+    maxCount: 4
+    spacing: 1
+  - area: Right
+    prototypes: [ClosetToolFilled, BookshelfFilled, TableReinforced]
+    minCount: 2
+    maxCount: 3
+    unique: true
+  decoration: [PottedPlant0]
+
+- type: repairStationRoom
+  id: RepairStationAtmospherics
+  section: Engineering
+  name: repair-station-room-atmospherics
+  minDepth: 10
+  tile: FloorSteel
+  trim: FloorShuttleBlue
+  door: AirlockAtmosphericsGlass
+  accentColor: "#79B3D1"
+  sign: SignAtmos
+  posters: [PosterLegitSafetyInternals, PosterLegitCarbonDioxide, PosterLegitSafetyMothPiping]
+  wallFixtures: [AirAlarm, FireAlarm]
+  windowWidth: 0
+  entranceDecal: CautionGreyscale
+  modules:
+  - anchor: BackLeft
+    size: 3,3
+    tile: Plating
+    marking: CautionGreyscale
+    entities:
+    - prototype: GasMinerOxygenStation
+      position: 0,2
+    - prototype: GasPassiveVent
+      position: 0,2
+    - prototype: GasPipeStraight
+      position: 0,1
+    - prototype: Grille
+      position: 0,1
+    - prototype: ReinforcedWindow
+      position: 0,1
+    - prototype: WallSolid
+      position: 1,1
+      wall: true
+    - prototype: Grille
+      position: 1,2
+    - prototype: ReinforcedWindow
+      position: 1,2
+    - prototype: GasPipeBend
+      position: 0,0
+      rotation: 180
+    - prototype: GasPressurePump
+      position: 1,0
+      rotation: 90
+    - prototype: GasPort
+      position: 2,0
+      rotation: 270
+    - prototype: OxygenCanister
+      position: 2,1
+  - anchor: BackRight
+    size: 3,3
+    tile: Plating
+    marking: CautionGreyscale
+    entities:
+    - prototype: GasMinerNitrogenStation
+      position: 2,2
+    - prototype: GasPassiveVent
+      position: 2,2
+    - prototype: GasPipeStraight
+      position: 2,1
+    - prototype: Grille
+      position: 2,1
+    - prototype: ReinforcedWindow
+      position: 2,1
+    - prototype: WallSolid
+      position: 1,1
+      wall: true
+    - prototype: Grille
+      position: 1,2
+    - prototype: ReinforcedWindow
+      position: 1,2
+    - prototype: GasPipeBend
+      position: 2,0
+      rotation: 270
+    - prototype: GasPressurePump
+      position: 1,0
+      rotation: 270
+    - prototype: GasPort
+      position: 0,0
+      rotation: 90
+    - prototype: NitrogenCanister
+      position: 0,1
+  furnishings:
+  - area: Left
+    prototypes: [GasMixer, GasFilter, GasThermoMachineFreezer]
+    minCount: 2
+    maxCount: 3
+    spacing: 1
+    unique: true
+  - area: Right
+    tile: FloorSteelCheckerDark
+    prototypes: [ComputerAtmosMonitoring]
+    seat: ChairOfficeDark
+    maxCount: 1
+  - area: Right
+    prototypes: [Rack, ClosetToolFilled]
+    maxCount: 2
+    spacing: 1
+    unique: true
+  decoration: [PottedPlant0]
+
+- type: repairStationRoom
+  id: RepairStationKitchen
+  section: Service
+  name: repair-station-room-kitchen
+  borderDecals: *repairRoomWhiteLines
+  cornerDecals: *repairRoomWhiteCorners
+  innerCornerDecals: *repairRoomWhiteInnerCorners
+  light: PoweredlightLED
+  tile: FloorWhite
+  trim: FloorSteelCheckerLight
+  door: AirlockGlass
+  accentColor: "#D7C4A0"
+  sign: SignKitchen
+  posters: [PosterLegitCleanliness, PosterLegitFruitBowl]
+  wallFixtures: [FireAlarm, ExtinguisherCabinetFilled]
+  furnishings:
+  - area: Back
+    prototypes: [KitchenMicrowave, KitchenElectricGrill, VendingMachineDinnerware]
+    minCount: 3
+    maxCount: 3
+    unique: true
+  - area: Left
+    continuous: true
+    prototypes: [TableCounterMetal]
+    props: [DrinkMug, Beaker, Paper]
+    minCount: 3
+    maxCount: 5
+    spacing: 1
+  - area: Right
+    prototypes: [LockerFreezer, CrateFreezer, KitchenReagentGrinder]
+    minCount: 2
+    maxCount: 3
+    spacing: 2
+    unique: true
+  decoration: [PottedPlant4]
+
+- type: repairStationRoom
+  id: RepairStationBar
+  section: Service
+  name: repair-station-room-bar
+  borderDecals: *repairRoomDarkLines
+  cornerDecals: *repairRoomDarkCorners
+  innerCornerDecals: *repairRoomDarkInnerCorners
+  light: PoweredWarmSmallLight
+  tile: FloorWood
+  trim: FloorDark
+  door: AirlockGlass
+  featureTile: FloorCarpetOffice
+  accentColor: "#BC9274"
+  sign: SignBar
+  posters: [PosterLegitHighClassMartini, PosterLegitCohibaRobustoAd, PosterLegitVacation]
+  wallFixtures: [IntercomCommon]
+  furnishings:
+  - area: Back
+    prototypes: [BoozeDispenser, VendingMachineBooze]
+    minCount: 2
+    maxCount: 2
+    unique: true
+  - area: Left
+    continuous: true
+    prototypes: [TableCounterWood]
+    props: [DrinkGlass, DrinkMugMetal]
+    seat: ChairWood
+    minCount: 3
+    maxCount: 5
+    spacing: 1
+  - area: Right
+    continuous: true
+    prototypes: [TableWood]
+    props: [DrinkGlass, DrinkMugBlue]
+    seat: ChairWood
+    minCount: 2
+    maxCount: 3
+    spacing: 2
+  decoration: [PottedPlant2, PottedPlant4]
+
+- type: repairStationRoom
+  id: RepairStationDormitory
+  section: Habitation
+  name: repair-station-room-dormitory
+  borderDecals: *repairRoomDarkLines
+  cornerDecals: *repairRoomDarkCorners
+  innerCornerDecals: *repairRoomDarkInnerCorners
+  light: PoweredWarmSmallLight
+  minDepth: 9
+  tile: FloorWood
+  trim: FloorSteelCheckerLight
+  door: AirlockGlass
+  featureTile: FloorCarpetOffice
+  accentColor: "#99AAC4"
+  sign: SignCryo
+  posters: [PosterLegitVacation, PosterLegitIan, PosterLegitSafetyMothSSD]
+  wallFixtures: [IntercomCommon]
+  modules:
+  - anchor: BackLeft
+    size: 2,3
+    tile: FloorCarpetOffice
+    entities:
+    - prototype: BedWood
+      position: 0,2
+    - prototype: BedsheetBlue
+      position: 0,2
+    - prototype: Windoor
+      position: 0,1
+    - prototype: WallSolid
+      position: 1,1
+      wall: true
+    - prototype: WallSolid
+      position: 1,2
+      wall: true
+  - anchor: BackRight
+    size: 2,3
+    tile: FloorCarpetOffice
+    entities:
+    - prototype: BedWood
+      position: 1,2
+    - prototype: BedsheetWhite
+      position: 1,2
+    - prototype: Windoor
+      position: 1,1
+    - prototype: WallSolid
+      position: 0,1
+      wall: true
+    - prototype: WallSolid
+      position: 0,2
+      wall: true
+  furnishings:
+  - area: Back
+    prototypes: [Dresser, BookshelfFilled]
+    minCount: 2
+    maxCount: 2
+    unique: true
+  - area: Left
+    prototypes: [BedWood]
+    props: [BedsheetBlue, BedsheetWhite]
+    minCount: 2
+    maxCount: 3
+    spacing: 2
+  - area: Right
+    prototypes: [Bed]
+    props: [BedsheetGrey, BedsheetGreen]
+    minCount: 2
+    maxCount: 3
+    spacing: 2
+  decoration: [PottedPlant1, PottedPlant4]
+
+- type: repairStationRoom
+  id: RepairStationRobotics
+  section: Science
+  name: repair-station-room-robotics
+  frontWindows: 2
+  minDepth: 9
+  tile: FloorSteel
+  trim: FloorShuttlePurple
+  door: AirlockScienceGlass
+  accentColor: "#AA9FCE"
+  sign: SignScience
+  posters: [PosterLegitScience, PosterLegitBuild, PosterLegitSafetyEyeProtection]
+  wallFixtures: [IntercomScience, ExtinguisherCabinetFilled]
+  entranceDecal: CautionGreyscale
+  partitionChance: 0.5
+  furnishings:
+  - area: Back
+    prototypes: [ExosuitFabricator, ComputerResearchAndDevelopment]
+    minCount: 2
+    maxCount: 2
+    unique: true
+  - area: Left
+    continuous: true
+    prototypes: [TableReinforced]
+    props: [Screwdriver, Wrench, CableApcStack]
+    seat: ChairGreyscale
+    minCount: 3
+    maxCount: 5
+    spacing: 1
+  - area: Right
+    prototypes: [Rack, ClosetToolFilled, CrateGenericSteel]
+    minCount: 2
+    maxCount: 4
+    spacing: 1
+    unique: true
+  decoration: [PottedPlant0]
+
+- type: repairStationRoom
+  id: RepairStationSalvage
+  section: Engineering
+  name: repair-station-room-salvage
+  tile: FloorSteelPavement
+  trim: FloorDark
+  door: AirlockSalvageGlass
+  accentColor: "#BAAA73"
+  sign: SignSalvage
+  posters: [PosterLegitSafetyEyeProtection, PosterLegitSafetyMothHardhat, PosterLegitBuild]
+  wallFixtures: [FireAlarm, ExtinguisherCabinetFilled]
+  entranceDecal: LoadingAreaGreyscale
+  windowWidth: 5
+  furnishings:
+  - area: Back
+    prototypes: [OreProcessor, VendingMachineSalvage, LockerSalvageSpecialist]
+    minCount: 3
+    maxCount: 3
+    unique: true
+  - area: Left
+    prototypes: [OreBox, Rack, CrateGenericSteel]
+    minCount: 3
+    maxCount: 5
+    spacing: 1
+  - area: Right
+    continuous: true
+    prototypes: [TableReinforced]
+    props: [Wrench, Screwdriver, Paper]
+    seat: Chair
+    minCount: 2
+    maxCount: 4
+    spacing: 1
+  decoration: [PottedPlant0]
+
+- type: repairStationRoom
+  id: RepairStationTelecommunications
+  section: Engineering
+  name: repair-station-room-telecommunications
+  borderDecals: *repairRoomDarkLines
+  cornerDecals: *repairRoomDarkCorners
+  innerCornerDecals: *repairRoomDarkInnerCorners
+  light: PoweredWarmSmallLight
+  minDepth: 9
+  tile: FloorDark
+  trim: FloorShuttleBlue
+  door: AirlockEngineeringGlass
+  accentColor: "#7497B6"
+  sign: SignTelecomms
+  posters: [PosterLegitSafetyReport, PosterLegitWorkForAFuture]
+  wallFixtures: [IntercomEngineering, FireAlarm]
+  partitionChance: 0.75
+  furnishings:
+  - area: Back
+    tile: FloorSteelCheckerDark
+    prototypes: [ComputerSurveillanceCameraMonitor, ComputerPowerMonitoring]
+    seat: ChairOfficeDark
+    minCount: 2
+    maxCount: 2
+    unique: true
+  - area: Left
+    continuous: true
+    prototypes: [TelecomServerFilled]
+    minCount: 3
+    maxCount: 5
+    spacing: 1
+  - area: Right
+    prototypes: [SurveillanceCameraRouterConstructed, Rack, TableReinforced]
+    minCount: 2
+    maxCount: 4
+    spacing: 1
+    unique: true
+  decoration: [PottedPlant0]
+
+- type: repairStationRoom
+  id: RepairStationCryogenics
+  section: Medical
+  name: repair-station-room-cryogenics
+  borderDecals: *repairRoomWhiteLines
+  cornerDecals: *repairRoomWhiteCorners
+  innerCornerDecals: *repairRoomWhiteInnerCorners
+  light: PoweredlightLED
+  frontWindows: 2
+  minDepth: 9
+  tile: FloorWhite
+  trim: FloorBlue
+  door: AirlockMedicalGlass
+  accentColor: "#89B7CE"
+  sign: SignCryogenicsMed
+  posters: [PosterLegitAnatomyPoster, PosterLegitHelpOthers, PosterLegitCleanliness]
+  wallFixtures: [AirAlarm, DefibrillatorCabinetFilled]
+  partitionChance: 0.65
+  furnishings:
+  - area: Back
+    prototypes: [GasThermoMachineFreezer, MedicalScanner]
+    minCount: 2
+    maxCount: 2
+    unique: true
+  - area: Left
+    prototypes: [CryoPod]
+    minCount: 2
+    maxCount: 3
+    spacing: 2
+  - area: Right
+    continuous: true
+    prototypes: [TableGlass]
+    props: [Beaker, Syringe, Gauze1]
+    minCount: 2
+    maxCount: 4
+    spacing: 1
+  decoration: [PottedPlant1]
+
+- type: repairStationRoom
+  id: RepairStationJanitor
+  section: Service
+  name: repair-station-room-janitor
+  tile: FloorSteel
+  trim: FloorShuttlePurple
+  door: AirlockGlass
+  accentColor: "#AA96B8"
+  sign: SignJanitor
+  posters: [PosterLegitCleanliness, PosterLegitHelpOthers]
+  wallFixtures: [FireAlarm, IntercomService]
+  furnishings:
+  - area: Back
+    prototypes: [ClosetJanitorFilled, Sink, WaterTankFull]
+    minCount: 3
+    maxCount: 3
+    unique: true
+  - area: Left
+    prototypes: [JanitorialTrolley, MopBucket, Rack]
+    minCount: 3
+    maxCount: 4
+    spacing: 2
+    unique: true
+  - area: Right
+    continuous: true
+    prototypes: [TableWood]
+    props: [Bucket, Paper]
+    minCount: 2
+    maxCount: 4
+    spacing: 1
+  decoration: [PottedPlant2]
+
+- type: repairStationRoom
+  id: RepairStationBathroom
+  section: Service
+  name: repair-station-room-bathroom
+  borderDecals: *repairRoomWhiteLines
+  cornerDecals: *repairRoomWhiteCorners
+  innerCornerDecals: *repairRoomWhiteInnerCorners
+  light: PoweredlightLED
+  minDepth: 9
+  tile: FloorWhite
+  trim: FloorSteelCheckerLight
+  door: AirlockGlass
+  accentColor: "#93BAC3"
+  sign: SignBath
+  posters: [PosterLegitCleanliness, PosterLegitNoERP]
+  wallFixtures: [IntercomCommon]
+  windowWidth: 0
+  modules:
+  - anchor: BackLeft
+    size: 2,3
+    entities:
+    - prototype: ToiletEmpty
+      position: 0,2
+    - prototype: Airlock
+      position: 0,1
+    - prototype: WallSolid
+      position: 1,1
+      wall: true
+    - prototype: WallSolid
+      position: 1,2
+      wall: true
+  - anchor: BackRight
+    size: 2,3
+    entities:
+    - prototype: ToiletEmpty
+      position: 1,2
+    - prototype: Airlock
+      position: 1,1
+    - prototype: WallSolid
+      position: 0,1
+      wall: true
+    - prototype: WallSolid
+      position: 0,2
+      wall: true
+  furnishings:
+  - area: Back
+    prototypes: [Sink, SinkWide]
+    minCount: 2
+    maxCount: 4
+    spacing: 2
+  - area: Left
+    prototypes: [Sink, BenchComfy]
+    minCount: 2
+    maxCount: 3
+    spacing: 2
+    unique: true
+  - area: Right
+    prototypes: [ClosetSteelBase, BenchComfy]
+    minCount: 2
+    maxCount: 3
+    spacing: 2
+    unique: true
+  decoration: [PottedPlant4, PottedPlant1]
+
+- type: repairStationRoom
+  id: RepairStationRecreation
+  section: Habitation
+  name: repair-station-room-recreation
+  borderDecals: *repairRoomDarkLines
+  cornerDecals: *repairRoomDarkCorners
+  innerCornerDecals: *repairRoomDarkInnerCorners
+  light: PoweredWarmSmallLight
+  tile: FloorWood
+  trim: FloorSteelCheckerLight
+  door: AirlockGlass
+  featureTile: FloorCarpetOffice
+  accentColor: "#B09FC0"
+  sign: SignArcade
+  posters: [PosterLegitNTTGC, PosterLegitSoftCapPopArt, PosterLegitPDAAd]
+  wallFixtures: [IntercomCommon]
+  furnishings:
+  - area: Back
+    prototypes: [VendingMachineGames, VendingMachineSoda]
+    minCount: 2
+    maxCount: 2
+    unique: true
+  - area: Left
+    prototypes: [SpaceVillainArcadeFilled, BlockGameArcade]
+    minCount: 2
+    maxCount: 3
+    spacing: 2
+    unique: true
+  - area: Right
+    continuous: true
+    prototypes: [TableWood]
+    props: [BookBase, DrinkMugBlue]
+    seat: ChairWood
+    minCount: 2
+    maxCount: 4
+    spacing: 2
+  decoration: [PottedPlant4, PottedPlant2]
+
+- type: repairStationRoom
+  id: RepairStationObservatory
+  section: Habitation
+  name: repair-station-room-observatory
+  borderDecals: *repairRoomDarkLines
+  cornerDecals: *repairRoomDarkCorners
+  innerCornerDecals: *repairRoomDarkInnerCorners
+  light: PoweredWarmSmallLight
+  tile: FloorSteelCheckerLight
+  trim: FloorDark
+  door: AirlockGlass
+  featureTile: FloorCarpetOffice
+  accentColor: "#93B6C4"
+  sign: SignBridge
+  posters: [PosterLegitCarpMount, PosterLegitVacation, PosterLegitNanotrasenLogo]
+  wallFixtures: [IntercomCommon]
+  windowWidth: 7
+  furnishings:
+  - area: Island
+    continuous: true
+    prototypes: [TableGlass]
+    props: [Paper, Pen, DrinkMugMetal]
+    seat: ChairOfficeLight
+    minCount: 1
+    maxCount: 2
+  - area: Back
+    tile: FloorSteelCheckerDark
+    prototypes: [ComputerRadar, ComputerSensorMonitoring]
+    seat: ChairOfficeDark
+    minCount: 2
+    maxCount: 2
+    unique: true
+  - area: Left
+    prototypes: [BenchComfy]
+    minCount: 2
+    maxCount: 3
+    spacing: 2
+  - area: Right
+    prototypes: [BookshelfFilled, ComfyChair]
+    minCount: 2
+    maxCount: 3
+    spacing: 2
+    unique: true
+  decoration: [PottedPlant0, PottedPlant2]
+
+- type: repairOrder
+  id: RepairOrderProceduralCompact
+  name: repair-order-procedural-compact-name
+  description: repair-order-procedural-compact-description
+  objectType: repair-order-object-type-procedural-station
+  objectName: repair-order-procedural-compact-object
+  difficulty: 2
+  weight: 60
+  proceduralStation: RepairStationCompact
+  damageProfile: RepairDamageLight
+  scoreProfile: RepairOrderEngineeringScore
+  rewardPool: RepairOrderEngineeringRewardPool
+  repairTime: 50m
+
+- type: repairOrder
+  id: RepairOrderProceduralStandard
+  name: repair-order-procedural-standard-name
+  description: repair-order-procedural-standard-description
+  objectType: repair-order-object-type-procedural-station
+  objectName: repair-order-procedural-standard-object
+  difficulty: 4
+  weight: 28
+  proceduralStation: RepairStationStandard
+  damageProfile: RepairDamageStandard
+  scoreProfile: RepairOrderEngineeringScore
+  rewardPool: RepairOrderEngineeringRewardPool
+  repairTime: 70m
+
+- type: repairOrder
+  id: RepairOrderProceduralLarge
+  name: repair-order-procedural-large-name
+  description: repair-order-procedural-large-description
+  objectType: repair-order-object-type-procedural-station
+  objectName: repair-order-procedural-large-object
+  difficulty: 6
+  weight: 14
+  proceduralStation: RepairStationLarge
+  damageProfile: RepairDamageHeavy
+  scoreProfile: RepairOrderEngineeringScore
+  rewardPool: RepairOrderEngineeringRewardPool
+  repairTime: 90m

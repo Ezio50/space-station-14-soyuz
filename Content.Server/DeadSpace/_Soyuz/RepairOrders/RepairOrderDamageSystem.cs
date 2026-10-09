@@ -35,6 +35,8 @@ public sealed class RepairOrderDamageSystem : EntitySystem
         var floors = SortCells(_map.GetAllTiles(grid.Owner, grid.Comp).Where(t => !t.Tile.IsEmpty).Select(t => t.GridIndices));
         var entities = new List<RepairDamageEntity>();
         var protectedFloors = new HashSet<Vector2i>();
+        if (TryComp<RepairGeneratedStationComponent>(grid.Owner, out var generated))
+            protectedFloors.UnionWith(generated.ProtectedCells);
         var windows = new Dictionary<Vector2i, List<EntityUid>>();
         var windowSupports = new HashSet<EntityUid>();
         var children = Transform(grid.Owner).ChildEnumerator;
@@ -61,7 +63,7 @@ public sealed class RepairOrderDamageSystem : EntitySystem
             if (!values.TryResolve(id, out var value))
                 throw new InvalidOperationException($"Repair value configuration error: order {order.ID}, grid {grid.Owner}, entity {id}, position {xform.LocalPosition}.");
             values.TryGetCategory(id, out var category);
-            var protectedEntity = !_protection.CanProcedurallyDamage(child);
+            var protectedEntity = generated?.ProtectedCells.Contains(cell) == true || !_protection.CanProcedurallyDamage(child);
             if (protectedEntity) protectedFloors.Add(cell);
             entities.Add(new RepairDamageEntity(0, child, id, xform.LocalPosition, xform.LocalRotation, cell, category, value, protectedEntity));
         }

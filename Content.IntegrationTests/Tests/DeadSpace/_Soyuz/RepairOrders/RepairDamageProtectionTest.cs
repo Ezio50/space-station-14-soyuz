@@ -5,7 +5,6 @@ using System.Linq;
 using System.Numerics;
 using Content.Server.DeadSpace._Soyuz.RepairOrders;
 using Content.Shared.DeadSpace._Soyuz.RepairOrders;
-using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -162,7 +161,7 @@ public sealed class RepairDamageProtectionTest
                 EntityUid grid = default;
                 try
                 {
-                    Assert.That(server.System<MapLoaderSystem>().TryLoadGrid(mapId, order.TargetGridPath, out var loaded), Is.True);
+                    Assert.That(server.System<RepairStationGenerationSystem>().TryCreateTarget(mapId, order, 0, out var loaded), Is.True);
                     grid = loaded!.Value.Owner;
                     Assert.That(validation.TryPrepareSession(station, 1, order.ID, grid, out _), Is.True);
                     var blueprint = server.EntMan.GetComponent<RepairBlueprintComponent>(grid);
