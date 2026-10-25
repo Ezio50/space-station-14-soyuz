@@ -1,5 +1,15 @@
+# Пример заполнения общего списка исключений:
+# - type: repairValueExclusion
+#   id: RepairExclude
+#   tags:
+#   - Paper
+#   entities:
+#   - HandmadePoster
+# Добавляйте записи в существующий RepairExclude ниже, не создавая второй прототип.
+
 - type: repairValueExclusion
   id: RepairExclude
+  tags: []
   entities:
   - DebugAPCRecharging
   - DebugBatteryDischarger

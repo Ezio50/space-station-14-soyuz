@@ -2,6 +2,7 @@
 
 using System.Linq;
 using Content.Shared.Maps;
+using Content.Shared.Tag;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
@@ -13,8 +14,9 @@ namespace Content.Shared.DeadSpace._Soyuz.RepairOrders;
 public enum RepairTileLayer : byte { None, Lattice, Plating, Floor }
 
 /// <summary>
-/// Validated exact-ID lookup. Candidate detection is used only by developer validation,
-/// never to assign a runtime price. Invalid catalogs cannot resolve any values.
+/// Validated exact-ID lookup, with tag exclusions expanded when the catalog is built.
+/// Candidate detection is used only by developer validation, never to assign a runtime price.
+/// Invalid catalogs cannot resolve any values.
 /// </summary>
 public sealed class RepairValueCatalog
 {
@@ -140,18 +142,39 @@ public sealed class RepairValueCatalog
             result._values[entry.Entity.Id] = entry.Value;
         }
 
+        var excludedTags = new HashSet<ProtoId<TagPrototype>>();
         foreach (var exclusion in exclusions)
         {
-            if (exclusion.Entities.Count == 0)
-                result.Errors.Add($"RepairValueExclusion {exclusion.ID}: entities are required.");
+            if (exclusion.Entities.Count == 0 && exclusion.Tags.Count == 0)
+                result.Errors.Add($"RepairValueExclusion {exclusion.ID}: entities or tags are required.");
+            foreach (var tag in exclusion.Tags)
+            {
+                if (!prototypes.HasIndex(tag))
+                    result.Errors.Add($"RepairValueExclusion {exclusion.ID}: missing TagPrototype {tag}.");
+                else
+                    excludedTags.Add(tag);
+            }
             foreach (var entity in exclusion.Entities)
             {
                 CheckEntity(entity, exclusion.ID);
                 if (!result._excluded.Add(entity.Id))
                     result.Errors.Add($"RepairValueExclusion {exclusion.ID}: duplicate exclusion for {entity}.");
-                if (result._values.ContainsKey(entity.Id))
-                    result.Errors.Add($"RepairValueExclusion {exclusion.ID}: {entity} is classified AND excluded.");
             }
+        }
+        if (excludedTags.Count > 0)
+        {
+            var tagSystem = IoCManager.Resolve<IEntityManager>().System<TagSystem>();
+            foreach (var entity in prototypes.EnumeratePrototypes<EntityPrototype>())
+            {
+                if (entity.Components.TryGetComponent("Tag", out var component) && component is TagComponent tagsComponent &&
+                    tagSystem.HasAnyTag(tagsComponent, excludedTags))
+                    result._excluded.Add(entity.ID);
+            }
+        }
+        foreach (var entity in result._excluded)
+        {
+            if (result._values.ContainsKey(entity))
+                result.Errors.Add($"RepairValueExclusion: {entity} is classified AND excluded.");
         }
         result.Errors.Sort(StringComparer.Ordinal);
         return result;
