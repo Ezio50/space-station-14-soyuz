@@ -525,7 +525,6 @@
   cost: 50
   maxCount: 1
   minimumShopLevel: 7
-  classified: true
 
 - type: repairReward
   id: RepairOrderRepairCrewWelderReward
@@ -533,7 +532,6 @@
   cost: 50
   maxCount: 1
   minimumShopLevel: 7
-  classified: true
 
 - type: repairReward
   id: RepairOrderRepairCrewJawsOfLifeReward
@@ -541,7 +539,6 @@
   cost: 75
   maxCount: 1
   minimumShopLevel: 7
-  classified: true
 
 - type: repairReward
   id: RepairOrderClothingEyesHudGreenBeretReward
@@ -572,7 +569,6 @@
   cost: 150
   maxCount: 1
   minimumShopLevel: 8
-  classified: true
 
 - type: repairReward
   id: RepairOrderOxygenGasMinerMachineCircuitboardReward
@@ -604,7 +600,6 @@
   cost: 300
   maxCount: 1
   minimumShopLevel: 8
-  classified: true
 
 - type: repairReward
   id: RepairOrderGasMinerNitrogenIndustrialCoreReward
@@ -612,7 +607,6 @@
   cost: 400
   maxCount: 1
   minimumShopLevel: 8
-  classified: true
 
 - type: repairReward
   id: RepairOrderGasMinerOxygenIndustrialCoreReward
@@ -620,7 +614,6 @@
   cost: 400
   maxCount: 1
   minimumShopLevel: 8
-  classified: true
 
 - type: repairReward
   id: RepairOrderGasMinerIndustrialCoreReward
@@ -628,7 +621,6 @@
   cost: 500
   maxCount: 1
   minimumShopLevel: 8
-  classified: true
 
 - type: repairReward
   id: RepairOrderRestorerCloakReward

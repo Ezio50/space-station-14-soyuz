@@ -13,11 +13,6 @@ namespace Content.Shared.DeadSpace._Soyuz.RepairOrders;
 // A placed upper tile includes its supporting layers; removing it exposes the next layer.
 public enum RepairTileLayer : byte { None, Lattice, Plating, Floor }
 
-/// <summary>
-/// Validated exact-ID lookup, with tag exclusions expanded when the catalog is built.
-/// Candidate detection is used only by developer validation, never to assign a runtime price.
-/// Strict validation rejects invalid catalogs; runtime builds retain valid entries and protect ambiguous entities.
-/// </summary>
 public sealed class RepairValueCatalog
 {
     public static readonly ProtoId<ContentTileDefinition> StandardFloor = "FloorSteel";

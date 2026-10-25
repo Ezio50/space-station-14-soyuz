@@ -182,11 +182,10 @@ public sealed partial class RepairOrderValidationSystem : EntitySystem
             preparedSession.CurrentPoints = blueprint.CurrentPoints;
             preparedSession.Exclusions = RepairTechnicalExclusionSnapshot.Capture(blueprint);
             preparedSession.MaxPoints = blueprint.MaxPoints;
-            prepared = true;
-
             _sawmill.Info(
                 $"Prepared repair blueprint for order {orderPrototype} on grid {gridUid}: " +
                 $"{blueprint.TotalTasks} target requirements, {blueprint.CompletedTasks} initially correct.");
+            prepared = true;
             return true;
         }
         catch (Exception exception)
@@ -1252,7 +1251,6 @@ public sealed partial class RepairOrderValidationSystem : EntitySystem
         return normalized;
     }
 
-    /// <summary>Shared runtime prices for damage and scoring, retaining valid entries after configuration errors.</summary>
     public RepairValueCatalog GetValueCatalog()
     {
         if (_valueCatalog != null)
