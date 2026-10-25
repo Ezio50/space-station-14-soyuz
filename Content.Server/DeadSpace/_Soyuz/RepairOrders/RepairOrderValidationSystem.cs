@@ -70,7 +70,6 @@ public sealed partial class RepairOrderValidationSystem : EntitySystem
 
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
     {
-        // Existing blueprints retain their immutable prices. New orders use the new catalog.
         _valueCatalog = null;
     }
 
@@ -81,7 +80,6 @@ public sealed partial class RepairOrderValidationSystem : EntitySystem
         if (_dirtyCells.Count == 0)
             return;
 
-        // Events can arrive before all snap-grid bookkeeping is finalized. Coalesce cells and validate next update.
         var pending = _dirtyCells.ToArray();
         _dirtyCells.Clear();
 
@@ -137,7 +135,8 @@ public sealed partial class RepairOrderValidationSystem : EntitySystem
         int runtimeId,
         ProtoId<RepairOrderPrototype> orderPrototype,
         EntityUid gridUid,
-        out ActiveRepairOrder preparedSession)
+        out ActiveRepairOrder preparedSession,
+        RepairValueCatalog? values = null)
     {
         preparedSession = new ActiveRepairOrder(runtimeId, orderPrototype, gridUid);
         var runtimeAttached = false;
@@ -166,7 +165,7 @@ public sealed partial class RepairOrderValidationSystem : EntitySystem
             runtimeAttached = true;
             ResetBlueprintRuntime(blueprint, stationUid, orderPrototype);
 
-            if (!TryBuildBlueprint((gridUid, blueprint), order))
+            if (!TryBuildBlueprint((gridUid, blueprint), order, values ?? GetValueCatalog()))
                 return false;
 
             blueprint.Ready = true;
@@ -261,7 +260,8 @@ public sealed partial class RepairOrderValidationSystem : EntitySystem
 
     private bool TryBuildBlueprint(
         Entity<RepairBlueprintComponent> blueprint,
-        RepairOrderPrototype order)
+        RepairOrderPrototype order,
+        RepairValueCatalog values)
     {
         MapId? temporaryMapId = null;
 
@@ -278,7 +278,6 @@ public sealed partial class RepairOrderValidationSystem : EntitySystem
             _temporaryTargetMaps[blueprint.Owner] = mapId;
             _map.SetPaused(temporaryMap, true);
 
-            // TryLoadGrid also rejects files which do not contain exactly one grid.
             if (!_loader.TryLoadGrid(mapId, order.TargetGridPath, out var loadedTarget))
             {
                 _sawmill.Error($"Cannot build repair blueprint for {order.ID}: target grid {order.TargetGridPath} failed to load or does not contain exactly one grid.");
@@ -286,7 +285,7 @@ public sealed partial class RepairOrderValidationSystem : EntitySystem
             }
 
             var target = loadedTarget.Value;
-            var scoreLookup = BuildScoreLookup(order, blueprint.Owner);
+            var scoreLookup = BuildScoreLookup(order, blueprint.Owner, values);
             _scoreLookups[blueprint.Owner] = scoreLookup;
             blueprint.Comp.EntityIdentityRules.Clear();
             blueprint.Comp.EntityIdentityRules.AddRange(scoreLookup.EntityIdentityRules);
@@ -311,7 +310,6 @@ public sealed partial class RepairOrderValidationSystem : EntitySystem
         }
         finally
         {
-            // This deletes the target grid and all of its children; none of them enter the playable map.
             DeleteTemporaryTargetMap(blueprint.Owner, temporaryMapId);
         }
     }
@@ -341,7 +339,6 @@ public sealed partial class RepairOrderValidationSystem : EntitySystem
 
         foreach (var targetTile in _map.GetAllTiles(target.Owner, target.Comp))
         {
-            // Base tiles are independent of every anchored covering (CarpetBase and its descendants).
             if (targetTile.Tile.IsEmpty) continue;
             var expectedCell = GetOrCreateExpectedCell(blueprint.Comp, targetTile.GridIndices);
             foreach (var (layer, tile) in RepairValueCatalog.GetTileLayers(targetTile.Tile.TypeId, _tileDefinitions))
@@ -666,8 +663,6 @@ public sealed partial class RepairOrderValidationSystem : EntitySystem
             }
         }
 
-        // ValuePrototype preserves the exact source price, but must not change identity semantics:
-        // replacing a filled machine with its equivalent empty variant does not remove a baseline object.
         var remainingUnexpected = comparison.Unexpected.Values
             .GroupBy(entry => entry.Signature with { ValuePrototype = null })
             .ToDictionary(group => group.Key, group => group.Sum(entry => entry.Count));
@@ -1146,7 +1141,6 @@ public sealed partial class RepairOrderValidationSystem : EntitySystem
 
     private void OnMove(ref MoveEvent args)
     {
-        // Anchor/unanchor events cover detached entities. Ordinary unanchored movement is irrelevant.
         if (!args.Component.Anchored)
             return;
 
@@ -1258,15 +1252,25 @@ public sealed partial class RepairOrderValidationSystem : EntitySystem
         return normalized;
     }
 
-    private RepairScoreLookup BuildScoreLookup(RepairOrderPrototype order, EntityUid grid)
+    /// <summary>Shared runtime prices for damage and scoring, retaining valid entries after configuration errors.</summary>
+    public RepairValueCatalog GetValueCatalog()
     {
-        _valueCatalog ??= RepairValueCatalog.Build(_prototype);
-        if (_valueCatalog.Errors.Count > 0)
-            throw new InvalidOperationException(string.Join("\n", _valueCatalog.Errors));
+        if (_valueCatalog != null)
+            return _valueCatalog;
+        var values = RepairValueCatalog.Build(_prototype, allowPartial: true);
+        _valueCatalog = values;
+        if (values.Errors.Count != 0)
+            _sawmill.Warning("Repair value catalog contains invalid entries; valid entries remain active and affected entities are protected:\n" +
+                             string.Join("\n", values.Errors));
+        return values;
+    }
+
+    private RepairScoreLookup BuildScoreLookup(RepairOrderPrototype order, EntityUid grid, RepairValueCatalog values)
+    {
         var profile = _prototype.Index(order.ScoreProfile);
         if (profile.FloorTilePoints <= 0)
             throw new InvalidOperationException($"Repair score profile {profile.ID}: floorTilePoints must be positive.");
-        var lookup = new RepairScoreLookup(order.ID, grid, _valueCatalog)
+        var lookup = new RepairScoreLookup(order.ID, grid, values)
         {
             FloorTilePoints = profile.FloorTilePoints,
         };

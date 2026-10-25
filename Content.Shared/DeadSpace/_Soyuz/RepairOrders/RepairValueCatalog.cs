@@ -16,7 +16,7 @@ public enum RepairTileLayer : byte { None, Lattice, Plating, Floor }
 /// <summary>
 /// Validated exact-ID lookup, with tag exclusions expanded when the catalog is built.
 /// Candidate detection is used only by developer validation, never to assign a runtime price.
-/// Invalid catalogs cannot resolve any values.
+/// Strict validation rejects invalid catalogs; runtime builds retain valid entries and protect ambiguous entities.
 /// </summary>
 public sealed class RepairValueCatalog
 {
@@ -26,20 +26,23 @@ public sealed class RepairValueCatalog
     private readonly Dictionary<string, int> _values = new();
     private readonly Dictionary<string, string> _categories = new();
     private readonly HashSet<string> _excluded = new();
+    private readonly bool _allowPartial;
     public readonly List<string> Errors = new();
+
+    private RepairValueCatalog(bool allowPartial) => _allowPartial = allowPartial;
 
     public bool TryResolve(string entity, out int value)
     {
         value = 0;
-        return Errors.Count == 0 && _values.TryGetValue(entity, out value);
+        return (_allowPartial || Errors.Count == 0) && _values.TryGetValue(entity, out value);
     }
 
-    public bool IsExcluded(string entity) => Errors.Count == 0 && _excluded.Contains(entity);
+    public bool IsExcluded(string entity) => (_allowPartial || Errors.Count == 0) && _excluded.Contains(entity);
 
     public bool TryGetCategory(string entity, out string category)
     {
         category = string.Empty;
-        return Errors.Count == 0 && _categories.TryGetValue(entity, out category!);
+        return (_allowPartial || Errors.Count == 0) && _categories.TryGetValue(entity, out category!);
     }
 
     public static RepairTileLayer GetTileLayer(ContentTileDefinition tile)
@@ -86,47 +89,70 @@ public sealed class RepairValueCatalog
         return result;
     }
 
-    public static RepairValueCatalog Build(IPrototypeManager prototypes)
+    public static RepairValueCatalog Build(IPrototypeManager prototypes, bool allowPartial = false)
         => Build(prototypes,
             prototypes.EnumeratePrototypes<RepairValueTagPrototype>(),
             prototypes.EnumeratePrototypes<RepairValueGroupPrototype>(),
             prototypes.EnumeratePrototypes<RepairValueOverridePrototype>(),
-            prototypes.EnumeratePrototypes<RepairValueExclusionPrototype>());
+            prototypes.EnumeratePrototypes<RepairValueExclusionPrototype>(), allowPartial);
 
     public static RepairValueCatalog Build(
         IPrototypeManager prototypes,
         IEnumerable<RepairValueTagPrototype> tags,
         IEnumerable<RepairValueGroupPrototype> groups,
         IEnumerable<RepairValueOverridePrototype> overrides,
-        IEnumerable<RepairValueExclusionPrototype> exclusions)
+        IEnumerable<RepairValueExclusionPrototype> exclusions,
+        bool allowPartial = false)
     {
-        var result = new RepairValueCatalog();
+        var result = new RepairValueCatalog(allowPartial);
         var tagValues = new Dictionary<string, int>();
+        var invalidTags = new HashSet<string>();
+        var invalidEntities = new HashSet<string>();
         foreach (var tag in tags)
         {
             if (tag.Value <= 0)
+            {
                 result.Errors.Add($"RepairValueTag {tag.ID}: value must be positive.");
+                invalidTags.Add(tag.ID);
+            }
             if (!tagValues.TryAdd(tag.ID, tag.Value))
+            {
                 result.Errors.Add($"Duplicate RepairValueTag {tag.ID}.");
+                invalidTags.Add(tag.ID);
+            }
         }
+        foreach (var tag in invalidTags)
+            tagValues.Remove(tag);
 
-        void CheckEntity(EntProtoId entity, string source)
+        bool CheckEntity(EntProtoId entity, string source)
         {
-            if (!prototypes.HasIndex(entity))
-                result.Errors.Add($"{source}: missing EntityPrototype {entity}.");
+            if (prototypes.HasIndex(entity))
+                return true;
+            result.Errors.Add($"{source}: missing EntityPrototype {entity}.");
+            return false;
         }
 
         foreach (var group in groups)
         {
             if (group.Entities.Count == 0)
                 result.Errors.Add($"RepairValueGroup {group.ID}: empty group.");
-            if (!tagValues.TryGetValue(group.Tag.Id, out var value))
+            var validTag = tagValues.TryGetValue(group.Tag.Id, out var value);
+            if (!validTag)
                 result.Errors.Add($"RepairValueGroup {group.ID}: missing RepairValueTag {group.Tag}.");
             foreach (var entity in group.Entities)
             {
-                CheckEntity(entity, group.ID);
+                if (!CheckEntity(entity, group.ID))
+                    continue;
+                if (!validTag)
+                {
+                    invalidEntities.Add(entity.Id);
+                    continue;
+                }
                 if (!result._values.TryAdd(entity.Id, value))
+                {
                     result.Errors.Add($"RepairValueGroup {group.ID}: duplicate classification for {entity}.");
+                    invalidEntities.Add(entity.Id);
+                }
                 result._categories.TryAdd(entity.Id, group.Tag.Id);
             }
         }
@@ -134,11 +160,19 @@ public sealed class RepairValueCatalog
         var overridden = new HashSet<string>();
         foreach (var entry in overrides)
         {
-            CheckEntity(entry.Entity, entry.ID);
+            var exists = CheckEntity(entry.Entity, entry.ID);
             if (entry.Value <= 0)
                 result.Errors.Add($"RepairValueOverride {entry.ID}: value must be positive.");
-            if (!overridden.Add(entry.Entity.Id))
+            var unique = overridden.Add(entry.Entity.Id);
+            if (!unique)
                 result.Errors.Add($"RepairValueOverride {entry.ID}: duplicate override for {entry.Entity}.");
+            if (!exists)
+                continue;
+            if (entry.Value <= 0 || !unique)
+            {
+                invalidEntities.Add(entry.Entity.Id);
+                continue;
+            }
             result._values[entry.Entity.Id] = entry.Value;
         }
 
@@ -156,7 +190,8 @@ public sealed class RepairValueCatalog
             }
             foreach (var entity in exclusion.Entities)
             {
-                CheckEntity(entity, exclusion.ID);
+                if (!CheckEntity(entity, exclusion.ID))
+                    continue;
                 if (!result._excluded.Add(entity.Id))
                     result.Errors.Add($"RepairValueExclusion {exclusion.ID}: duplicate exclusion for {entity}.");
             }
@@ -175,6 +210,12 @@ public sealed class RepairValueCatalog
         {
             if (result._values.ContainsKey(entity))
                 result.Errors.Add($"RepairValueExclusion: {entity} is classified AND excluded.");
+        }
+        result._excluded.UnionWith(invalidEntities);
+        foreach (var entity in result._excluded)
+        {
+            result._values.Remove(entity);
+            result._categories.Remove(entity);
         }
         result.Errors.Sort(StringComparer.Ordinal);
         return result;
