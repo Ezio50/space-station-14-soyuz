@@ -634,7 +634,7 @@
   id: RepairOrderTungstenTlecCanisterReward
   entity: TungstenTlecCanister
   cost: 5000
-  maxCount: 1
+  maxCount: 2
   minimumShopLevel: 10
   classified: true
 
