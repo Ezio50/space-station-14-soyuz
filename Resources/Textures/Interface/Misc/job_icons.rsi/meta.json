@@ -312,7 +312,13 @@
         },
 	{
       	    "name": "IAAOfficer"
-    	}
+        },
+        {
+            "name": "Politruk"
+        },
+        {
+            "name": "Politkom"
+        }
 
     ]
 }

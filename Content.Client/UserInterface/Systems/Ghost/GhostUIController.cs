@@ -13,7 +13,6 @@ namespace Content.Client.UserInterface.Systems.Ghost;
 public sealed class GhostUIController : UIController, IOnSystemChanged<GhostSystem>, IOnSystemChanged<NewLifeSystem>
 {
     [Dependency] private readonly IEntityNetworkManager _net = default!;
-    [Dependency] private readonly IEntityManager _entManager = default!; // DS14-Soyuz
 
     [UISystemDependency] private readonly GhostSystem? _system = default;
     [UISystemDependency] private readonly NewLifeSystem? _newLife = default;

@@ -81,6 +81,21 @@
         },
         {
             "name": "tranquilizer"
+        },
+        {
+            "name": "mag-silver-1"
+        },
+        {
+            "name": "mag-silver-2"
+        },
+        {
+            "name": "mag-silver-3"
+        },
+        {
+            "name": "mag-silver-4"
+        },
+        {
+            "name": "silver"
         }
     ]
 }

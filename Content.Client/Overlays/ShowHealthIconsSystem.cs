@@ -16,7 +16,6 @@ namespace Content.Client.Overlays;
 public sealed class ShowHealthIconsSystem : EquipmentHudSystem<ShowHealthIconsComponent>
 {
     [Dependency] private readonly IPrototypeManager _prototypeMan = default!;
-    [Dependency] private readonly SharedRottingSystem _rotting = default!; // DS14-Soyuz
 
     [ViewVariables]
     public HashSet<string> DamageContainers = new();
