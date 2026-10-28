@@ -47,6 +47,8 @@
           - MilitiaOperationDocument
   - type: ContainerContainer
     containers:
+      board: !type:Container
+        ents: []
       operationDocument: !type:ContainerSlot {}
   - type: Computer
     board: MilitiaOperationComputerCircuitboard
