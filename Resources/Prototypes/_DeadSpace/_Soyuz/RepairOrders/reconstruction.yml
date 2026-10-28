@@ -1,4 +1,3 @@
-# DS14-Soyuz: reconstruction uses the authoritative repair blueprint and value catalog.
 - type: entity
   parent: BaseItem
   id: RepairReconstructionTablet
