@@ -1,5 +1,3 @@
-# Мёртвый Космос, Союз-1, Licensed under custom terms with restrictions on public hosting and commercial use, full text: https://raw.githubusercontent.com/dead-space-server/space-station-14-soyuz/master/LICENSES/LICENSE.TXT
-
 militia-operation-title = Оперативное обеспечение милиции
 militia-operation-subtitle = Дежурная служба · СССП · Закрытый канал
 militia-operation-supply-nav = Снабжение
