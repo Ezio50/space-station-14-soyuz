@@ -103,22 +103,22 @@ public sealed partial class MilitiaOperationSystem
         var profile = _prototypes.Index(actor.Equipment);
         if (profile.Protection.Count == 0 || profile.Weapons.Count == 0 || profile.ReloadTime <= TimeSpan.Zero)
             throw new InvalidOperationException($"Incomplete militia equipment profile {profile.ID}.");
-        var outfit = new StartingGearPrototype();
+        var equipment = new Dictionary<string, EntProtoId>();
         foreach (var (slot, choices) in profile.Equipment)
         {
             if (choices.Count == 0)
                 throw new InvalidOperationException($"Empty militia equipment slot {slot} in {profile.ID}.");
-            outfit.Equipment[slot] = choices[random.Next(choices.Count)];
+            equipment[slot] = choices[random.Next(choices.Count)];
         }
         var protection = profile.Protection[random.Next(profile.Protection.Count)];
-        outfit.Equipment["head"] = protection.Helmet;
-        outfit.Equipment["outerClothing"] = protection.Suit;
+        equipment["head"] = protection.Helmet;
+        equipment["outerClothing"] = protection.Suit;
         foreach (var slot in new[] { "head", "outerClothing", "back", "belt", "shoes", "gloves", "mask", "jumpsuit", "id" })
         {
-            if (!outfit.Equipment.ContainsKey(slot))
+            if (!equipment.ContainsKey(slot))
                 throw new InvalidOperationException($"Missing mandatory militia equipment slot {slot} in {profile.ID}.");
         }
-        foreach (var (slot, prototype) in outfit.Equipment)
+        foreach (var (slot, prototype) in equipment)
         {
             var item = Spawn(prototype, Transform(uid).Coordinates);
             actor.CreatedEquipment.Add(item);
@@ -127,7 +127,7 @@ public sealed partial class MilitiaOperationSystem
             if (!_inventory.TryEquip(uid, item, slot, silent: true, force: true))
                 throw new InvalidOperationException($"Cannot equip militia slot {slot}: {prototype}.");
         }
-        foreach (var (slot, expected) in outfit.Equipment)
+        foreach (var (slot, expected) in equipment)
         {
             if (!_inventory.TryGetSlotEntity(uid, slot, out var item) || MetaData(item.Value).EntityPrototype?.ID != expected.Id)
                 throw new InvalidOperationException($"Cannot equip militia slot {slot}: {expected}.");
