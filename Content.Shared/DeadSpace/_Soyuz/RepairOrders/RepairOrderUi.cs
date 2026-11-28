@@ -295,14 +295,25 @@ public sealed class RepairOrderShopPurchaseMessage : BoundUserInterfaceMessage
 }
 
 [Serializable, NetSerializable]
-public sealed class RepairOrderShopResultMessage : BoundUserInterfaceMessage
+public sealed class RepairOrderShopStatusRequestEvent(NetEntity console, string requestId) : EntityEventArgs
 {
+    public readonly NetEntity Console = console;
+    public readonly string RequestId = requestId;
+}
+
+[Serializable, NetSerializable]
+public sealed class RepairOrderShopResultEvent : EntityEventArgs
+{
+    public readonly NetEntity Console;
+    public readonly NetEntity Actor;
     public readonly string RequestId;
     public readonly bool Success;
     public readonly string Message;
 
-    public RepairOrderShopResultMessage(string requestId, bool success, string message)
+    public RepairOrderShopResultEvent(NetEntity console, NetEntity actor, string requestId, bool success, string message)
     {
+        Console = console;
+        Actor = actor;
         RequestId = requestId;
         Success = success;
         Message = message;

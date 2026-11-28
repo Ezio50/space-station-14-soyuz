@@ -23,6 +23,8 @@ namespace Content.Client.DeadSpace._Soyuz.RepairOrders;
 [GenerateTypedNameReferences]
 public sealed partial class RepairOrderWindow : FancyWindow
 {
+    private static readonly TimeSpan ShopResponseTimeout = TimeSpan.FromSeconds(5);
+
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IPrototypeManager _prototype = default!;
     [Dependency] private readonly ITileDefinitionManager _tileDefinitions = default!;
@@ -35,7 +37,8 @@ public sealed partial class RepairOrderWindow : FancyWindow
     private readonly Dictionary<string, int> _shopCart;
     private RepairOrderBoundUserInterfaceState? _state;
     private bool _shopPurchasePending => _draft.PendingRequestId != null;
-    private bool _retryPendingPurchase;
+    private bool CanRetryShopPurchase => _shopPurchasePending && _timing.RealTime >= _draft.RetryAt;
+    private bool _showingShopRetry;
     private FancyWindow? _completionDialog;
     private FancyWindow? _briefingDialog;
     private FancyWindow? _shopDetailsDialog;
@@ -46,16 +49,17 @@ public sealed partial class RepairOrderWindow : FancyWindow
     public event Action<int, bool>? OnComplete;
     public event Action<int, bool, long>? OnRetain;
     public event Action<int>? OnPrintReport;
-    public event Action<string, List<RepairOrderRewardBuiEntry>>? OnShopPurchase;
+    public event Action<RepairOrderShopPurchaseMessage>? OnShopPurchase;
+    public event Action<string>? OnShopStatusRequest;
 
     public RepairOrderWindow(RepairOrderShopDraft? draft = null)
     {
         _draft = draft ?? new RepairOrderShopDraft();
         _shopCart = _draft.Cart;
-        _retryPendingPurchase = _shopPurchasePending;
         RobustXamlLoader.Load(this);
         IoCManager.InjectDependencies(this);
         _prototype.PrototypesReloaded += OnPrototypesReloaded;
+        _draft.ResultReceived += OnShopResult;
         _sprite = _entitySystemManager.GetEntitySystem<SpriteSystem>();
         InitializePresentation();
         ShopSearch.Text = _draft.Search;
@@ -94,7 +98,10 @@ public sealed partial class RepairOrderWindow : FancyWindow
     protected override void Dispose(bool disposing)
     {
         if (disposing)
+        {
             _prototype.PrototypesReloaded -= OnPrototypesReloaded;
+            _draft.ResultReceived -= OnShopResult;
+        }
         base.Dispose(disposing);
     }
 
@@ -242,26 +249,25 @@ public sealed partial class RepairOrderWindow : FancyWindow
         UpdateTimers();
         if (showActive)
             OrderTabs.CurrentTab = 1;
-        if (_retryPendingPurchase)
-        {
-            _retryPendingPurchase = false;
-            if (_draft.PendingRequestId is { } requestId && _draft.PendingLines is { } lines)
-                OnShopPurchase?.Invoke(requestId, lines.ToList());
-        }
     }
 
-    public void ShowShopResult(RepairOrderShopResultMessage result)
+    private void OnShopResult() => UpdateShop();
+
+    private void UpdateShopStatus()
     {
-        if (result.RequestId != _draft.PendingRequestId)
-            return;
-
-        _draft.PendingRequestId = null;
-        _draft.PendingLines = null;
-        if (result.Success)
-            _shopCart.Clear();
-
-        ShopResultLabel.SetMessage(Loc.GetString(result.Message), result.Success ? Color.LightGreen : Color.Orange);
-        UpdateShop();
+        _showingShopRetry = CanRetryShopPurchase;
+        ShopCheckoutButton.Text = Loc.GetString(_showingShopRetry ? "repair-orders-shop-retry" : "repair-orders-shop-checkout");
+        if (_shopPurchasePending)
+        {
+            ShopCheckoutButton.Disabled = !_showingShopRetry || _state?.ShopPurchaseInProgress == true;
+            ShopResultLabel.SetMessage(Loc.GetString(_showingShopRetry
+                ? "repair-orders-shop-response-timeout"
+                : _draft.StatusRequested ? "repair-orders-shop-checking" : "repair-orders-shop-processing"), Amber);
+        }
+        else if (_draft.Result is { } result)
+            ShopResultLabel.SetMessage(Loc.GetString(result.Message), result.Success ? Color.LightGreen : Color.Orange);
+        else
+            ShopResultLabel.Clear();
     }
 
     private void UpdateWorklist(RepairOrderBoundUserInterfaceState state)
@@ -374,8 +380,7 @@ public sealed partial class RepairOrderWindow : FancyWindow
             return;
 
         var state = _state;
-        if (_shopPurchasePending)
-            ShopResultLabel.SetMessage(Loc.GetString("repair-orders-shop-processing"), Amber);
+        UpdateShopStatus();
         ShopPointsLabel.Text = Loc.GetString("repair-orders-shop-points", ("points", state.RepairPoints));
         ShopReputationLabel.Text = Loc.GetString("repair-orders-shop-reputation", ("reputation", state.EngineeringReputation));
         ShopLevelLabel.Text = state.ShopLevel > 0
@@ -411,7 +416,8 @@ public sealed partial class RepairOrderWindow : FancyWindow
         {
             CloseShopDetails();
             ShopCatalogContainer.AddChild(new Label { Text = Loc.GetString("repair-orders-shop-unavailable") });
-            ShopCheckoutButton.Disabled = true;
+            if (!_shopPurchasePending)
+                ShopCheckoutButton.Disabled = true;
             return;
         }
 
@@ -656,7 +662,8 @@ public sealed partial class RepairOrderWindow : FancyWindow
                 _shopCart[id] = next;
             remove.Disabled = next == 0 || _shopPurchasePending;
             add.Disabled = locked || next >= reward.MaxCount || _shopPurchasePending;
-            ShopResultLabel.Clear();
+            _draft.Result = null;
+            UpdateShopStatus();
             UpdateShopCart();
             UpdateShopDetails();
         };
@@ -798,8 +805,9 @@ public sealed partial class RepairOrderWindow : FancyWindow
             ShopCartContainer.AddChild(new Label { Text = Loc.GetString("repair-orders-shop-cart-empty") });
 
         ShopTotalLabel.Text = Loc.GetString("repair-orders-shop-total", ("total", total));
-        ShopCheckoutButton.Disabled = _shopCart.Count == 0 || _shopPurchasePending ||
-                                      _state.ShopPurchaseInProgress || !valid || total > _state.RepairPoints;
+        if (!_shopPurchasePending)
+            ShopCheckoutButton.Disabled = _shopCart.Count == 0 || _state.ShopPurchaseInProgress ||
+                                          !valid || total > _state.RepairPoints;
     }
 
     private void ChangeShopQuantity(string id, int delta, int maxCount)
@@ -813,24 +821,45 @@ public sealed partial class RepairOrderWindow : FancyWindow
         else
             _shopCart[id] = next;
 
-        ShopResultLabel.Clear();
+        _draft.Result = null;
         UpdateShop();
     }
 
     private void SubmitShopPurchase()
     {
-        if (_shopPurchasePending || ShopCheckoutButton.Disabled || _shopCart.Count == 0)
+        if (_state == null || ShopCheckoutButton.Disabled)
+            return;
+
+        if (_draft.PendingRequestId is { } pendingId)
+        {
+            if (CanRetryShopPurchase)
+                RequestShopStatus(pendingId);
+            return;
+        }
+        if (_shopCart.Count == 0)
             return;
 
         var requestId = Guid.NewGuid().ToString("N");
-        var lines = _shopCart
-            .Select(line => new RepairOrderRewardBuiEntry(line.Key, line.Value))
-            .ToList();
-        _draft.PendingLines = lines;
+        var lines = _shopCart.Select(line => new RepairOrderRewardBuiEntry(line.Key, line.Value)).ToList();
         _draft.PendingRequestId = requestId;
-        ShopResultLabel.SetMessage(Loc.GetString("repair-orders-shop-processing"), Amber);
-        OnShopPurchase?.Invoke(requestId, lines.ToList());
+        _draft.Result = null;
+        _draft.StatusRequested = false;
+        _draft.PurchaseTick = _timing.CurTick;
+        _draft.RetryAt = _timing.RealTime + ShopResponseTimeout;
+        UpdateShopStatus();
+        OnShopPurchase?.Invoke(new RepairOrderShopPurchaseMessage(requestId, lines));
         UpdateShop();
+    }
+
+    private void RequestShopStatus(string requestId)
+    {
+        if (_timing.CurTick <= _draft.PurchaseTick)
+            return;
+
+        _draft.StatusRequested = true;
+        _draft.RetryAt = _timing.RealTime + ShopResponseTimeout;
+        UpdateShopStatus();
+        OnShopStatusRequest?.Invoke(requestId);
     }
 
     private void RequestCompletion(int runtimeId, bool retain = false)
@@ -905,6 +934,14 @@ public sealed partial class RepairOrderWindow : FancyWindow
     protected override void FrameUpdate(FrameEventArgs args)
     {
         base.FrameUpdate(args);
+        if (_draft.PendingRequestId is { } requestId && CanRetryShopPurchase)
+        {
+            // The server processes network messages by tick, so check after the purchase's tick.
+            if (!_draft.StatusRequested && _timing.CurTick > _draft.PurchaseTick)
+                RequestShopStatus(requestId);
+            else if (!_showingShopRetry)
+                UpdateShopStatus();
+        }
         UpdateTimers();
     }
 

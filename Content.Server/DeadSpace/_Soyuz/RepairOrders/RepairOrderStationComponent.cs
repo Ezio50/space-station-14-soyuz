@@ -64,9 +64,6 @@ public sealed partial class RepairOrderStationComponent : Component
     [ViewVariables]
     public bool ShopPurchaseInProgress;
 
-    /// <summary>Idempotency keys of purchases committed during this round.</summary>
-    public readonly HashSet<Guid> CompletedShopRequests = new();
-
     [ViewVariables]
     public bool PoolInitialized;
 

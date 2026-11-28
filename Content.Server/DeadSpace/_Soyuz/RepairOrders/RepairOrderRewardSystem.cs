@@ -5,7 +5,7 @@ using Content.Shared.DeadSpace._Soyuz.RepairOrders;
 using Content.Server.Station.Systems;
 using Content.Shared.Access.Systems;
 using Content.Shared.Emag.Systems;
-using Robust.Server.GameObjects;
+using Content.Shared.GameTicking;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server.DeadSpace._Soyuz.RepairOrders;
@@ -18,17 +18,19 @@ public sealed class RepairOrderRewardSystem : EntitySystem
     [Dependency] private readonly AccessReaderSystem _access = default!;
     [Dependency] private readonly EmagSystem _emag = default!;
     [Dependency] private readonly StationSystem _station = default!;
-    [Dependency] private readonly UserInterfaceSystem _ui = default!;
     [Dependency] private readonly RepairOrderSystem _repairOrders = default!;
     [Dependency] private readonly RepairOrderRewardDeliverySystem _delivery = default!;
     [Dependency] private readonly MetaDataSystem _metaData = default!;
 
+    private readonly Dictionary<Guid, EntityUid> _completedPurchases = new();
     private ISawmill _sawmill = default!;
 
     public override void Initialize()
     {
         base.Initialize();
         _sawmill = _logManager.GetSawmill("repair_orders");
+        SubscribeNetworkEvent<RepairOrderShopStatusRequestEvent>(OnStatusRequest);
+        SubscribeLocalEvent<RoundRestartCleanupEvent>(_ => _completedPurchases.Clear());
         Subs.BuiEvents<RepairOrderConsoleComponent>(RepairOrderUiKey.Key, subs =>
         {
             subs.Event<RepairOrderShopPurchaseMessage>(OnPurchase);
@@ -37,34 +39,37 @@ public sealed class RepairOrderRewardSystem : EntitySystem
 
     private void OnPurchase(Entity<RepairOrderConsoleComponent> console, ref RepairOrderShopPurchaseMessage args)
     {
-        var station = _station.GetOwningStation(console.Owner);
-        if (station == null || !TryComp<RepairOrderStationComponent>(station.Value, out var state))
+        var consoleId = GetNetEntity(console.Owner);
+        if (!Guid.TryParseExact(args.RequestId, "N", out var requestId))
         {
-            Reply(console.Owner, args.Actor, args.RequestId, false, "repair-orders-error-no-station");
+            Reply(consoleId, args.Actor, args.RequestId, false, "repair-orders-shop-error-invalid");
+            return;
+        }
+
+        if (_completedPurchases.TryGetValue(requestId, out var buyer))
+        {
+            var success = buyer == args.Actor;
+            Reply(consoleId, args.Actor, args.RequestId, success,
+                success ? "repair-orders-shop-success" : "repair-orders-shop-error-invalid");
             return;
         }
 
         if (!_access.IsAllowed(args.Actor, console.Owner))
         {
-            Reply(console.Owner, args.Actor, args.RequestId, false, "repair-orders-error-access");
+            Reply(consoleId, args.Actor, args.RequestId, false, "repair-orders-error-access");
             return;
         }
 
-        if (!Guid.TryParseExact(args.RequestId, "N", out var requestId))
+        var station = _station.GetOwningStation(console.Owner);
+        if (station == null || !TryComp<RepairOrderStationComponent>(station.Value, out var state))
         {
-            Reply(console.Owner, args.Actor, args.RequestId, false, "repair-orders-shop-error-invalid");
-            return;
-        }
-
-        if (state.CompletedShopRequests.Contains(requestId))
-        {
-            Reply(console.Owner, args.Actor, args.RequestId, true, "repair-orders-shop-success");
+            Reply(consoleId, args.Actor, args.RequestId, false, "repair-orders-error-no-station");
             return;
         }
 
         if (state.ShopPurchaseInProgress)
         {
-            Reply(console.Owner, args.Actor, args.RequestId, false, "repair-orders-shop-error-busy");
+            Reply(consoleId, args.Actor, args.RequestId, false, "repair-orders-shop-error-busy");
             return;
         }
 
@@ -113,7 +118,7 @@ public sealed class RepairOrderRewardSystem : EntitySystem
                 return;
             }
 
-            state.CompletedShopRequests.Add(requestId);
+            _completedPurchases.Add(requestId, args.Actor);
             state.RepairPoints -= totalCost;
             _delivery.Commit(delivery);
             committed = true;
@@ -137,15 +142,27 @@ public sealed class RepairOrderRewardSystem : EntitySystem
                 var requestMessageId = args.RequestId;
                 state.ShopPurchaseInProgress = false;
                 _repairOrders.RunPostCommitEffect("shop UI refresh", () => _repairOrders.RefreshStationUis(station.Value));
-                _repairOrders.RunPostCommitEffect("shop result", () => Reply(console.Owner, actor, requestMessageId, committed, result));
+                _repairOrders.RunPostCommitEffect("shop result", () => Reply(consoleId, actor, requestMessageId, committed, result));
             }
         }
     }
 
-    private void Reply(EntityUid console, EntityUid actor, string requestId, bool success, string message)
+    private void Reply(NetEntity console, EntityUid actor, string requestId, bool success, string message)
     {
-        _ui.ServerSendUiMessage(console, RepairOrderUiKey.Key,
-            new RepairOrderShopResultMessage(requestId, success, message), actor);
+        // A receipt belongs to the buyer even if the console UI closed during the purchase.
+        RaiseNetworkEvent(new RepairOrderShopResultEvent(console, GetNetEntity(actor), requestId, success, message), actor);
+    }
+
+    private void OnStatusRequest(RepairOrderShopStatusRequestEvent args, EntitySessionEventArgs session)
+    {
+        if (session.SenderSession.AttachedEntity is not { } actor ||
+            !Guid.TryParseExact(args.RequestId, "N", out var requestId))
+            return;
+
+        // Reconciliation only reads committed purchases. It cannot charge or deliver the cart again.
+        var success = _completedPurchases.TryGetValue(requestId, out var buyer) && buyer == actor;
+        Reply(args.Console, actor, args.RequestId, success,
+            success ? "repair-orders-shop-success" : "repair-orders-shop-not-completed");
     }
 
     public static int GetShopLevel(RepairRewardPoolPrototype pool, long reputation)
